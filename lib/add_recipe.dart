@@ -1,3 +1,5 @@
+import 'package:cook_mate/helper/DatabaseHelper.dart';
+import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
 class AddRecipe extends StatefulWidget {
@@ -29,7 +31,7 @@ class _AddRecipeState extends State<AddRecipe> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Recipe'),
+        title: const Text(AppStrings.titleAddRecipe),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         actions: [
@@ -45,38 +47,38 @@ class _AddRecipeState extends State<AddRecipe> {
             children: <Widget>[
               _buildTextFormField(
                 controller: _titleController,
-                labelText: 'Recipe Name',
+                labelText: AppStrings.labelRecipeName,
                 minLines: 1,
                 maxLines: 2,
                 validator: (value) => value == null || value.isEmpty
-                    ? "Please enter the recipe name"
+                    ? AppStrings.labelRecipeName
                     : null,
               ),
               _buildTextFormField(
                 controller: _descriptionController,
-                labelText: 'Description',
+                labelText: AppStrings.labelDescription,
                 minLines: 1,
                 maxLines: 3,
                 validator: (value) => value == null || value.isEmpty
-                    ? "Please enter the description"
+                    ? AppStrings.labelDescriptionPrompt
                     : null,
               ),
               _buildTextFormField(
                 controller: _ingredientsController,
-                labelText: 'Ingredients',
+                labelText: AppStrings.labelIngredients,
                 minLines: 3,
                 maxLines: 10,
                 validator: (value) => value == null || value.isEmpty
-                    ? "Please enter the ingredients"
+                    ? AppStrings.labelIngredientsPrompt
                     : null,
               ),
               _buildTextFormField(
                 controller: _instructionsController,
-                labelText: 'Steps',
+                labelText: AppStrings.labelSteps,
                 minLines: 3,
                 maxLines: 10,
                 validator: (value) => value == null || value.isEmpty
-                    ? "Please enter the steps to prepare"
+                    ? AppStrings.labelStepsPrompt
                     : null,
               ),
             ],
@@ -88,16 +90,28 @@ class _AddRecipeState extends State<AddRecipe> {
 
   void _saveRecipe() {
     if (_formKey.currentState?.validate() ?? false) {
-      _saveRecipeIntoDatabase();
+      _addRecipeIntoDatabase();
     }
   }
 
-  Future<void> _saveRecipeIntoDatabase() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Recipe saved successfully!')),
-    );
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
+  Future<void> _addRecipeIntoDatabase() async {
+    final title = _titleController.text;
+    final description = _descriptionController.text;
+    final ingredients = _ingredientsController.text;
+    final instructions = _instructionsController.text;
+
+    final row = {
+      DatabaseHelper.columnTitle: title,
+      DatabaseHelper.columnDescription: description,
+      DatabaseHelper.columnIngredients: ingredients,
+      DatabaseHelper.columnInstructions: instructions
+    };
+
+    final result = await DatabaseHelper.instance.insert(row);
+    if (mounted && result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageAddRecipeSuccess)),
+      );
       Navigator.of(context).pop();
     }
   }
