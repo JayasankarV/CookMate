@@ -38,7 +38,7 @@ class _AddRecipeState extends State<AddRecipe> {
           IconButton(onPressed: (_saveRecipe), icon: const Icon(Icons.save))
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -112,7 +112,7 @@ class _AddRecipeState extends State<AddRecipe> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(AppStrings.messageAddRecipeSuccess)),
       );
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     }
   }
 }
