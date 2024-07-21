@@ -5,6 +5,8 @@ import 'package:cook_mate/resources/strings.dart';
 import 'package:cook_mate/view_recipe.dart';
 import 'package:flutter/material.dart';
 
+import 'custom/SearchField.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -44,6 +46,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> _recipes = [];
+  List<Map<String, dynamic>> _filteredRecipes = [];
   bool _isLoading = true;
 
   void _launchAddRecipeAndAwait() async {
@@ -105,6 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final recipes = await DatabaseHelper.instance.getRecipes();
     setState(() {
       _recipes = recipes;
+      _filteredRecipes = recipes;
       _isLoading = false;
     });
   }
@@ -117,6 +121,22 @@ class _MyHomePageState extends State<MyHomePage> {
         const SnackBar(content: Text(AppStrings.messageRecipeDeleteAllSuccess)),
       );
       _fetchRecipes();
+    }
+  }
+
+  void _filterRecipes(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _filteredRecipes = _recipes;
+      });
+    } else {
+      setState(() {
+        _filteredRecipes = _recipes
+            .where((recipe) => recipe[DatabaseHelper.columnTitle]
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+            .toList();
+      });
     }
   }
 
@@ -140,27 +160,38 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _recipes.isNotEmpty
-              ? ListView.builder(
-                  itemCount: _recipes.length,
-                  itemBuilder: (context, index) {
-                    final recipe = _recipes[index];
-                    return _buildRecipeCard(
-                        title: recipe[DatabaseHelper.columnTitle],
-                        description: recipe[DatabaseHelper.columnDescription],
-                        onTap: () {
-                          _launchRecipeDetailsAndAwait(
-                              recipe[DatabaseHelper.columnId]);
-                        });
-                  },
-                )
-              : const Center(
-                  child: Text(
-                    AppStrings.messageAddResumeToContinue,
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SearchField(onChanged: _filterRecipes),
                 ),
-
+                _filteredRecipes.isNotEmpty
+                    ? Expanded(
+                        child: ListView.builder(
+                          itemCount: _filteredRecipes.length,
+                          itemBuilder: (context, index) {
+                            final recipe = _filteredRecipes[index];
+                            return _buildRecipeCard(
+                                title: recipe[DatabaseHelper.columnTitle],
+                                description:
+                                    recipe[DatabaseHelper.columnDescription],
+                                onTap: () {
+                                  _launchRecipeDetailsAndAwait(
+                                      recipe[DatabaseHelper.columnId]);
+                                });
+                          },
+                        ),
+                      )
+                    : const Expanded(
+                        child: Center(
+                        child: Text(
+                          AppStrings.messageAddResumeToContinue,
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      )),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _launchAddRecipeAndAwait,
         tooltip: AppStrings.titleAddRecipe,

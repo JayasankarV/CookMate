@@ -20,6 +20,8 @@ class AppStrings {
   static const String labelStepsPrompt = 'Please enter the steps to prepare';
   static const String labelPrefixError = 'Error';
 
+  static const String hintSearchRecipes = "Search Recipes";
+
   static const String messageAddRecipeSuccess = 'Recipe saved successfully!';
   static const String messageRecipeNotFound = 'Recipe not found';
   static const String messageRecipeDeleteAll = 'Are you sure you want to delete all recipes?';
