@@ -18,7 +18,7 @@ class _AddRecipeState extends State<AddRecipe> {
   final _ingredientsController = TextEditingController();
   final _instructionsController = TextEditingController();
 
-  late Future<Map<String, dynamic>> _currentRecipe;
+  Future<Map<String, dynamic>> _currentRecipe = Future.value({});
   bool _isModified = false;
 
   @override
@@ -139,9 +139,7 @@ class _AddRecipeState extends State<AddRecipe> {
 
   void _saveRecipe() {
     if (_formKey.currentState?.validate() ?? false) {
-      if (widget.recipeId > 0) {
-        _isModified = true;
-      }
+      _isModified = true;
       _addRecipeIntoDatabase();
     }
   }

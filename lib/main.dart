@@ -1,5 +1,6 @@
 import 'package:cook_mate/add_recipe.dart';
 import 'package:cook_mate/helper/DatabaseHelper.dart';
+import 'package:cook_mate/helper/DialogHelper.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:cook_mate/view_recipe.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: AppStrings.appName,
       theme: themeData,
-      home: const MyHomePage(title: AppStrings.appName),
+      home: const MyHomePage(title: AppStrings.titleHomeRecipe),
     );
   }
 }
@@ -69,6 +70,30 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _showDeleteAllDialog() {
+    if (_recipes.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return DialogBuilder(
+              title: AppStrings.titleDialogConfirmation,
+              message: AppStrings.messageRecipeDeleteAll,
+              positiveAction: () {
+                Navigator.of(context).pop();
+                _deleteAllRecipes();
+              },
+              negativeAction: () {
+                Navigator.of(context).pop();
+              });
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageDeleteAllEmpty)),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -76,11 +101,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchRecipes() async {
+    _isLoading = true;
     final recipes = await DatabaseHelper.instance.getRecipes();
     setState(() {
       _recipes = recipes;
       _isLoading = false;
     });
+  }
+
+  Future<void> _deleteAllRecipes() async {
+    _isLoading = true;
+    final result = await DatabaseHelper.instance.deleteAllRecipes();
+    if (mounted && result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageRecipeDeleteAllSuccess)),
+      );
+      _fetchRecipes();
+    }
   }
 
   @override
@@ -92,21 +129,38 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
+        actions: [
+          IconButton(
+              onPressed: (_showDeleteAllDialog),
+              icon: const Icon(Icons.filter_alt)),
+          IconButton(
+              onPressed: (_showDeleteAllDialog),
+              icon: const Icon(Icons.delete_forever))
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _recipes.length,
-              itemBuilder: (context, index) {
-                final recipe = _recipes[index];
-                return _buildRecipeCard(
-                    title: recipe[DatabaseHelper.columnTitle],
-                    description: recipe[DatabaseHelper.columnDescription],
-                    onTap: () {
-                      _launchRecipeDetailsAndAwait(recipe[DatabaseHelper.columnId]);
-                    });
-              },
-            ),
+          : _recipes.isNotEmpty
+              ? ListView.builder(
+                  itemCount: _recipes.length,
+                  itemBuilder: (context, index) {
+                    final recipe = _recipes[index];
+                    return _buildRecipeCard(
+                        title: recipe[DatabaseHelper.columnTitle],
+                        description: recipe[DatabaseHelper.columnDescription],
+                        onTap: () {
+                          _launchRecipeDetailsAndAwait(
+                              recipe[DatabaseHelper.columnId]);
+                        });
+                  },
+                )
+              : const Center(
+                  child: Text(
+                    AppStrings.messageAddResumeToContinue,
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: _launchAddRecipeAndAwait,
         tooltip: AppStrings.titleAddRecipe,
@@ -116,55 +170,53 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-Widget _buildRecipeCard({
-  required String title,
-  required String description,
-  required VoidCallback onTap
-}) {
+Widget _buildRecipeCard(
+    {required String title,
+    required String description,
+    required VoidCallback onTap}) {
   return GestureDetector(
     onTap: onTap,
     child: Card(
       margin: const EdgeInsets.all(8.0),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Expanded(
+            flex: 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Text(
-                        description,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.normal,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 16.0,
-              ),
-            ]),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.arrow_forward_ios,
+            size: 16.0,
+          ),
+        ]),
       ),
     ),
   );

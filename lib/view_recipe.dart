@@ -3,6 +3,8 @@ import 'package:cook_mate/helper/DatabaseHelper.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
+import 'helper/DialogHelper.dart';
+
 class ViewRecipe extends StatefulWidget {
   final int recipeId;
 
@@ -58,6 +60,35 @@ class _ViewRecipeState extends State<ViewRecipe> {
     });
   }
 
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return DialogBuilder(
+            title: AppStrings.titleDialogConfirmation,
+            message: AppStrings.messageRecipeDelete,
+            positiveAction: () {
+              Navigator.of(context).pop();
+              _deleteRecipeWithId(widget.recipeId);
+            },
+            negativeAction: () {
+              Navigator.of(context).pop();
+            });
+      },
+    );
+  }
+
+  Future<void> _deleteRecipeWithId(int recipeId) async {
+    final result = await DatabaseHelper.instance.deleteRecipeWithId(recipeId);
+    if (mounted && result > 0) {
+      _isModified = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageRecipeDeleteSuccess)),
+      );
+      Navigator.of(context).pop(_isModified);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -81,6 +112,12 @@ class _ViewRecipeState extends State<ViewRecipe> {
               icon: const Icon(Icons.edit),
               onPressed: () {
                 _launchEditRecipeAndAwait();
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_forever),
+              onPressed: () {
+                _showDeleteDialog();
               },
             )
           ],
