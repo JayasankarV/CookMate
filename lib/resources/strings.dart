@@ -1,17 +1,22 @@
 class AppStrings {
   static const String appName = 'CookMate';
 
+  static const String defaultEntryFilterAll =  "All";
+
   static const String titleHomeRecipe = 'Recipes';
   static const String titleAddRecipe = 'Add Recipe';
   static const String titleViewRecipe = 'View Recipe';
   static const String titleEditRecipe = 'Edit Recipe';
   static const String titleDialogConfirmation = 'Confirmation';
+  static const String titleDialogFilter = 'Categories';
 
   static const String actionConfirm = 'Confirm';
   static const String actionCancel = 'Cancel';
 
   static const String labelRecipeName = 'Recipe Name';
   static const String labelRecipeNamePrompt = 'Please enter the recipe name';
+  static const String labelCategory = 'Category';
+  static const String labelCategoryPrompt = 'Please enter the category';
   static const String labelDescription = 'Description';
   static const String labelDescriptionPrompt = 'Please enter the description';
   static const String labelIngredients = 'Ingredients';

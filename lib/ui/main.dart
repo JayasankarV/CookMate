@@ -1,11 +1,12 @@
-import 'package:cook_mate/add_recipe.dart';
-import 'package:cook_mate/helper/DatabaseHelper.dart';
-import 'package:cook_mate/helper/DialogHelper.dart';
+import 'package:cook_mate/custom/filter_dialog.dart';
+import 'package:cook_mate/ui/add_recipe.dart';
+import 'package:cook_mate/helper/database_helper.dart';
+import 'package:cook_mate/helper/dialog_builder.dart';
 import 'package:cook_mate/resources/strings.dart';
-import 'package:cook_mate/view_recipe.dart';
+import 'package:cook_mate/ui/view_recipe.dart';
 import 'package:flutter/material.dart';
 
-import 'custom/SearchField.dart';
+import '../custom/search_field.dart';
 
 void main() {
   runApp(const MyApp());
@@ -48,6 +49,33 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> _recipes = [];
   List<Map<String, dynamic>> _filteredRecipes = [];
   bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecipes();
+  }
+
+  Future<void> _fetchRecipes() async {
+    _isLoading = true;
+    final recipes = await DatabaseHelper.instance.getRecipes();
+    setState(() {
+      _recipes = recipes;
+      _filteredRecipes = recipes;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _deleteAllRecipes() async {
+    _isLoading = true;
+    final result = await DatabaseHelper.instance.deleteAllRecipes();
+    if (mounted && result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageRecipeDeleteAllSuccess)),
+      );
+      _fetchRecipes();
+    }
+  }
 
   void _launchAddRecipeAndAwait() async {
     final isUpdated = await Navigator.push(
@@ -97,34 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchRecipes();
-  }
-
-  Future<void> _fetchRecipes() async {
-    _isLoading = true;
-    final recipes = await DatabaseHelper.instance.getRecipes();
-    setState(() {
-      _recipes = recipes;
-      _filteredRecipes = recipes;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _deleteAllRecipes() async {
-    _isLoading = true;
-    final result = await DatabaseHelper.instance.deleteAllRecipes();
-    if (mounted && result > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.messageRecipeDeleteAllSuccess)),
-      );
-      _fetchRecipes();
-    }
-  }
-
-  void _filterRecipes(String query) {
+  void _searchRecipes(String query) {
     if (query.isEmpty) {
       setState(() {
         _filteredRecipes = _recipes;
@@ -135,6 +136,48 @@ class _MyHomePageState extends State<MyHomePage> {
             .where((recipe) => recipe[DatabaseHelper.columnTitle]
                 .toLowerCase()
                 .contains(query.toLowerCase()))
+            .toList();
+      });
+    }
+  }
+
+  void _showFilterDialog() async {
+    final filters = await DatabaseHelper.instance.getFilters();
+    if (mounted) {
+      if (filters.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return FilterDialog(
+                entries: createListWithDefault(AppStrings.defaultEntryFilterAll, filters),
+                onSelection: _filterRecipes
+            );
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.messageDeleteAllEmpty)),
+        );
+      }
+    }
+  }
+
+  List<String> createListWithDefault(String defaultItem, List<String> items) {
+    final newList = <String>[defaultItem];
+    newList.addAll(items);
+    return newList;
+  }
+
+  void _filterRecipes(String category) {
+    if (category.isEmpty || category == AppStrings.defaultEntryFilterAll) {
+      setState(() {
+        _filteredRecipes = _recipes;
+      });
+    } else {
+      setState(() {
+        _filteredRecipes = _recipes
+            .where((recipe) => recipe[DatabaseHelper.columnCategory]
+            .toLowerCase() == category.toLowerCase())
             .toList();
       });
     }
@@ -151,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
         foregroundColor: colorScheme.onPrimary,
         actions: [
           IconButton(
-              onPressed: (_showDeleteAllDialog),
+              onPressed: (_showFilterDialog),
               icon: const Icon(Icons.filter_alt)),
           IconButton(
               onPressed: (_showDeleteAllDialog),
@@ -164,7 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: SearchField(onChanged: _filterRecipes),
+                  child: SearchField(onChanged: _searchRecipes),
                 ),
                 _filteredRecipes.isNotEmpty
                     ? Expanded(

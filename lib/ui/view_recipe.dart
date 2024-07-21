@@ -1,9 +1,9 @@
-import 'package:cook_mate/add_recipe.dart';
-import 'package:cook_mate/helper/DatabaseHelper.dart';
+import 'package:cook_mate/ui/add_recipe.dart';
+import 'package:cook_mate/helper/database_helper.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
-import 'helper/DialogHelper.dart';
+import '../helper/dialog_builder.dart';
 
 class ViewRecipe extends StatefulWidget {
   final int recipeId;
@@ -17,6 +17,7 @@ class ViewRecipe extends StatefulWidget {
 class _ViewRecipeState extends State<ViewRecipe> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _categoryController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _ingredientsController = TextEditingController();
   final _instructionsController = TextEditingController();
@@ -27,6 +28,7 @@ class _ViewRecipeState extends State<ViewRecipe> {
   @override
   void dispose() {
     _titleController.dispose();
+    _categoryController.dispose();
     _descriptionController.dispose();
     _ingredientsController.dispose();
     _instructionsController.dispose();
@@ -148,6 +150,17 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         maxLines: 2,
                         validator: (value) => value == null || value.isEmpty
                             ? AppStrings.labelRecipeName
+                            : null,
+                      ),
+                      _buildTextFormField(
+                        controller: _categoryController,
+                        labelText: AppStrings.labelCategory,
+                        content: recipe[DatabaseHelper.columnCategory],
+                        minLines: 1,
+                        maxLines: 2,
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? AppStrings.labelCategoryPrompt
                             : null,
                       ),
                       _buildTextFormField(

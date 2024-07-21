@@ -1,4 +1,4 @@
-import 'package:cook_mate/helper/DatabaseHelper.dart';
+import 'package:cook_mate/helper/database_helper.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +14,7 @@ class AddRecipe extends StatefulWidget {
 class _AddRecipeState extends State<AddRecipe> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _categoryController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _ingredientsController = TextEditingController();
   final _instructionsController = TextEditingController();
@@ -24,6 +25,7 @@ class _AddRecipeState extends State<AddRecipe> {
   @override
   void dispose() {
     _titleController.dispose();
+    _categoryController.dispose();
     _descriptionController.dispose();
     _ingredientsController.dispose();
     _instructionsController.dispose();
@@ -47,9 +49,43 @@ class _AddRecipeState extends State<AddRecipe> {
     }
   }
 
+  void _saveRecipe() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _isModified = true;
+      _addRecipeIntoDatabase();
+    }
+  }
+
+  Future<void> _addRecipeIntoDatabase() async {
+    final title = _titleController.text;
+    final category = _categoryController.text;
+    final description = _descriptionController.text;
+    final ingredients = _ingredientsController.text;
+    final instructions = _instructionsController.text;
+
+    final row = {
+      DatabaseHelper.columnTitle: title,
+      DatabaseHelper.columnCategory: category,
+      DatabaseHelper.columnDescription: description,
+      DatabaseHelper.columnIngredients: ingredients,
+      DatabaseHelper.columnInstructions: instructions
+    };
+
+    final result = await DatabaseHelper.instance.insertOrUpdate(
+        row, widget.recipeId);
+    if (mounted && result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.messageAddRecipeSuccess)),
+      );
+      Navigator.of(context).pop(_isModified);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
 
     return PopScope(
       canPop: false,
@@ -88,8 +124,22 @@ class _AddRecipeState extends State<AddRecipe> {
                             : "",
                         minLines: 1,
                         maxLines: 2,
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) =>
+                        value == null || value.isEmpty
                             ? AppStrings.labelRecipeName
+                            : null,
+                      ),
+                      _buildTextFormField(
+                        controller: _categoryController,
+                        labelText: AppStrings.labelCategory,
+                        content: recipe != null
+                            ? recipe[DatabaseHelper.columnCategory]
+                            : "",
+                        minLines: 1,
+                        maxLines: 2,
+                        validator: (value) =>
+                        value == null || value.isEmpty
+                            ? AppStrings.labelCategoryPrompt
                             : null,
                       ),
                       _buildTextFormField(
@@ -100,7 +150,8 @@ class _AddRecipeState extends State<AddRecipe> {
                             : "",
                         minLines: 1,
                         maxLines: 3,
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) =>
+                        value == null || value.isEmpty
                             ? AppStrings.labelDescriptionPrompt
                             : null,
                       ),
@@ -112,7 +163,8 @@ class _AddRecipeState extends State<AddRecipe> {
                             : "",
                         minLines: 3,
                         maxLines: 10,
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) =>
+                        value == null || value.isEmpty
                             ? AppStrings.labelIngredientsPrompt
                             : null,
                       ),
@@ -124,7 +176,8 @@ class _AddRecipeState extends State<AddRecipe> {
                             : "",
                         minLines: 3,
                         maxLines: 10,
-                        validator: (value) => value == null || value.isEmpty
+                        validator: (value) =>
+                        value == null || value.isEmpty
                             ? AppStrings.labelStepsPrompt
                             : null,
                       ),
@@ -137,69 +190,40 @@ class _AddRecipeState extends State<AddRecipe> {
     );
   }
 
-  void _saveRecipe() {
-    if (_formKey.currentState?.validate() ?? false) {
-      _isModified = true;
-      _addRecipeIntoDatabase();
-    }
-  }
-
-  Future<void> _addRecipeIntoDatabase() async {
-    final title = _titleController.text;
-    final description = _descriptionController.text;
-    final ingredients = _ingredientsController.text;
-    final instructions = _instructionsController.text;
-
-    final row = {
-      DatabaseHelper.columnTitle: title,
-      DatabaseHelper.columnDescription: description,
-      DatabaseHelper.columnIngredients: ingredients,
-      DatabaseHelper.columnInstructions: instructions
-    };
-
-    final result = await DatabaseHelper.instance.insertOrUpdate(row, widget.recipeId);
-    if (mounted && result > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.messageAddRecipeSuccess)),
-      );
-      Navigator.of(context).pop(_isModified);
-    }
-  }
-}
-
-Widget _buildTextFormField({
-  required TextEditingController controller,
-  required String labelText,
-  required String? content,
-  required int minLines,
-  required int maxLines,
-  required String? Function(String?) validator,
-}) {
-  controller.text = content ?? "";
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12.0),
-    child: TextFormField(
-      controller: controller,
-      minLines: minLines,
-      maxLines: maxLines,
-      keyboardType: TextInputType.multiline,
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: Colors.grey),
+  Widget _buildTextFormField({
+    required TextEditingController controller,
+    required String labelText,
+    required String? content,
+    required int minLines,
+    required int maxLines,
+    required String? Function(String?) validator,
+  }) {
+    controller.text = content ?? "";
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12.0),
+      child: TextFormField(
+        controller: controller,
+        minLines: minLines,
+        maxLines: maxLines,
+        keyboardType: TextInputType.multiline,
+        decoration: InputDecoration(
+          labelText: labelText,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: const BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: const BorderSide(color: Colors.blue),
+          ),
+          alignLabelWithHint: true,
+          contentPadding:
+          const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: Colors.blue),
-        ),
-        alignLabelWithHint: true,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+        textAlignVertical: TextAlignVertical.top,
+        textAlign: TextAlign.start,
+        validator: validator,
       ),
-      textAlignVertical: TextAlignVertical.top,
-      textAlign: TextAlign.start,
-      validator: validator,
-    ),
-  );
+    );
+  }
 }

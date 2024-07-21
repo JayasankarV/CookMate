@@ -2,12 +2,12 @@ import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
 class DialogBuilder extends StatelessWidget {
-
   final String title;
   final String message;
   final VoidCallback positiveAction;
   final VoidCallback negativeAction;
 
+  /*TODO: need to make builder generic*/
   const DialogBuilder({super.key,
     required this.title,
     required this.message,
