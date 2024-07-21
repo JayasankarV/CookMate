@@ -40,14 +40,40 @@ class DatabaseHelper {
           ''');
   }
 
-  Future<int> insert(Map<String, dynamic> row) async {
+  Future<int> insertOrUpdate(Map<String, dynamic> row, int recipeId) async {
     Database db = await instance.database;
-    return await db.insert(recipeTable, row);
+    bool exists = await doesRecipeIdExist(recipeId);
+    if (exists) {
+      return await db.update(
+          recipeTable,
+          row,
+          where: '${DatabaseHelper.columnId} = ?',
+          whereArgs: [recipeId]
+      );
+    } else {
+      return await db.insert(recipeTable, row);
+    }
+  }
+
+  Future<bool> doesRecipeIdExist(int recipeId) async {
+    final result = await getRecipeForId(recipeId);
+    return result.isNotEmpty;
   }
 
   Future<List<Map<String, dynamic>>> getRecipes() async {
     Database db = await instance.database;
     return await db.query(recipeTable);
+  }
+
+  Future<List<Map<String, Object?>>> getRecipeForId(int recipeId) async {
+    Database db = await instance.database;
+    final result = await db.query(
+        recipeTable,
+        where: '${DatabaseHelper.columnId} = ?',
+        whereArgs: [recipeId],
+        limit: 1
+    );
+    return result;
   }
 
 }

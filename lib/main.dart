@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _launchAddRecipeAndAwait() async {
     final isUpdated = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AddRecipe()),
+      MaterialPageRoute(builder: (context) => const AddRecipe(-1)),
     );
     setState(() {
       if (isUpdated) {
@@ -57,12 +57,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _viewRecipeDetails() {
+  void _launchRecipeDetailsAndAwait(int recipeId) async {
+    final isUpdated = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ViewRecipe(recipeId)),
+    );
     setState(() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ViewRecipe()),
-      );
+      if (isUpdated) {
+        _fetchRecipes();
+      }
     });
   }
 
@@ -100,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     title: recipe[DatabaseHelper.columnTitle],
                     description: recipe[DatabaseHelper.columnDescription],
                     onTap: () {
-                      _viewRecipeDetails();
+                      _launchRecipeDetailsAndAwait(recipe[DatabaseHelper.columnId]);
                     });
               },
             ),
