@@ -209,6 +209,7 @@ class _ViewRecipeState extends State<ViewRecipe> {
       child: TextFormField(
         readOnly: true,
         controller: controller,
+        maxLines: null,
         keyboardType: TextInputType.multiline,
         decoration: InputDecoration(
           labelText: labelText,
