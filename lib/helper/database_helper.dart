@@ -42,6 +42,7 @@ class DatabaseHelper {
           CREATE TABLE $recipeTable (
             $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
             $columnTitle TEXT NOT NULL,
+            $columnCategory TEXT NOT NULL,
             $columnDescription TEXT NOT NULL,
             $columnIngredients TEXT NOT NULL,
             $columnInstructions TEXT NOT NULL
@@ -51,9 +52,9 @@ class DatabaseHelper {
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-          ALTER TABLE $recipeTable ADD COLUMN $columnCategory TEXT
-          ''');
+      await db.execute(
+          'ALTER TABLE $recipeTable ADD COLUMN $columnCategory TEXT'
+      );
     }
   }
 

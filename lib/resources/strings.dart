@@ -35,4 +35,5 @@ class AppStrings {
   static const String messageAddResumeToContinue = 'Get started by adding recipes';
   static const String messageRecipeDeleteAllSuccess = 'Recipes deleted successfully!';
   static const String messageRecipeDeleteSuccess = 'Recipe deleted successfully!';
+  static const String messageAddRecipeWarning = 'Unsaved changes will be lost. Do you really want to proceed?';
 }

@@ -2,6 +2,8 @@ import 'package:cook_mate/helper/database_helper.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:flutter/material.dart';
 
+import '../helper/dialog_builder.dart';
+
 class AddRecipe extends StatefulWidget {
   final int recipeId;
 
@@ -21,6 +23,7 @@ class _AddRecipeState extends State<AddRecipe> {
 
   Future<Map<String, dynamic>> _currentRecipe = Future.value({});
   bool _isModified = false;
+  bool _isEdited = false;
 
   @override
   void dispose() {
@@ -35,6 +38,23 @@ class _AddRecipeState extends State<AddRecipe> {
   @override
   void initState() {
     super.initState();
+
+    _titleController.addListener(() {
+      _isEdited = true;
+    });
+    _categoryController.addListener(() {
+      _isEdited = true;
+    });
+    _descriptionController.addListener(() {
+      _isEdited = true;
+    });
+    _ingredientsController.addListener(() {
+      _isEdited = true;
+    });
+    _instructionsController.addListener(() {
+      _isEdited = true;
+    });
+
     if (widget.recipeId > 0) {
       _currentRecipe = _fetchRecipeDetails(widget.recipeId);
     }
@@ -81,6 +101,33 @@ class _AddRecipeState extends State<AddRecipe> {
     }
   }
 
+  void _validateAndWarnBeforeExit() {
+    if (_isEdited) {
+      _showWarningDialog();
+    } else {
+      final NavigatorState navigator = Navigator.of(context);
+      navigator.pop(_isModified);
+    }
+  }
+
+  void _showWarningDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return DialogBuilder(
+            title: AppStrings.titleDialogConfirmation,
+            message: AppStrings.messageAddRecipeWarning,
+            positiveAction: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(_isModified);
+            },
+            negativeAction: () {
+              Navigator.of(context).pop();
+            });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme
@@ -93,12 +140,11 @@ class _AddRecipeState extends State<AddRecipe> {
         if (didPop) {
           return;
         }
-        final NavigatorState navigator = Navigator.of(context);
-        navigator.pop(_isModified);
+        _validateAndWarnBeforeExit();
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.titleAddRecipe),
+          title: Text(widget.recipeId > 0 ? AppStrings.titleEditRecipe : AppStrings.titleAddRecipe),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           actions: [

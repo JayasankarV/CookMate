@@ -146,8 +146,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         controller: _titleController,
                         labelText: AppStrings.labelRecipeName,
                         content: recipe[DatabaseHelper.columnTitle],
-                        minLines: 1,
-                        maxLines: 2,
                         validator: (value) => value == null || value.isEmpty
                             ? AppStrings.labelRecipeName
                             : null,
@@ -156,8 +154,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         controller: _categoryController,
                         labelText: AppStrings.labelCategory,
                         content: recipe[DatabaseHelper.columnCategory],
-                        minLines: 1,
-                        maxLines: 2,
                         validator: (value) =>
                         value == null || value.isEmpty
                             ? AppStrings.labelCategoryPrompt
@@ -167,8 +163,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         controller: _descriptionController,
                         labelText: AppStrings.labelDescription,
                         content: recipe[DatabaseHelper.columnDescription],
-                        minLines: 1,
-                        maxLines: 3,
                         validator: (value) => value == null || value.isEmpty
                             ? AppStrings.labelDescriptionPrompt
                             : null,
@@ -177,8 +171,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         controller: _ingredientsController,
                         labelText: AppStrings.labelIngredients,
                         content: recipe[DatabaseHelper.columnIngredients],
-                        minLines: 3,
-                        maxLines: 10,
                         validator: (value) => value == null || value.isEmpty
                             ? AppStrings.labelIngredientsPrompt
                             : null,
@@ -187,8 +179,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
                         controller: _instructionsController,
                         labelText: AppStrings.labelSteps,
                         content: recipe[DatabaseHelper.columnInstructions],
-                        minLines: 3,
-                        maxLines: 10,
                         validator: (value) => value == null || value.isEmpty
                             ? AppStrings.labelStepsPrompt
                             : null,
@@ -211,8 +201,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
     required TextEditingController controller,
     required String labelText,
     required String content,
-    required int minLines,
-    required int maxLines,
     required String? Function(String?) validator,
   }) {
     controller.text = content;
@@ -221,8 +209,6 @@ class _ViewRecipeState extends State<ViewRecipe> {
       child: TextFormField(
         readOnly: true,
         controller: controller,
-        minLines: minLines,
-        maxLines: maxLines,
         keyboardType: TextInputType.multiline,
         decoration: InputDecoration(
           labelText: labelText,

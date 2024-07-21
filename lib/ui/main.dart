@@ -1,9 +1,11 @@
 import 'package:cook_mate/custom/filter_dialog.dart';
+import 'package:cook_mate/resources/colors.dart';
 import 'package:cook_mate/ui/add_recipe.dart';
 import 'package:cook_mate/helper/database_helper.dart';
 import 'package:cook_mate/helper/dialog_builder.dart';
 import 'package:cook_mate/resources/strings.dart';
 import 'package:cook_mate/ui/view_recipe.dart';
+import 'package:cook_mate/utils/string_utils.dart';
 import 'package:flutter/material.dart';
 
 import '../custom/search_field.dart';
@@ -149,9 +151,9 @@ class _MyHomePageState extends State<MyHomePage> {
           context: context,
           builder: (BuildContext context) {
             return FilterDialog(
-                entries: createListWithDefault(AppStrings.defaultEntryFilterAll, filters),
-                onSelection: _filterRecipes
-            );
+                entries: createListWithDefault(
+                    AppStrings.defaultEntryFilterAll, filters),
+                onSelection: _filterRecipes);
           },
         );
       } else {
@@ -176,8 +178,9 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       setState(() {
         _filteredRecipes = _recipes
-            .where((recipe) => recipe[DatabaseHelper.columnCategory]
-            .toLowerCase() == category.toLowerCase())
+            .where((recipe) =>
+                recipe[DatabaseHelper.columnCategory].toLowerCase() ==
+                category.toLowerCase())
             .toList();
       });
     }
@@ -188,6 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.grayF,
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: colorScheme.primary,
@@ -217,6 +221,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             final recipe = _filteredRecipes[index];
                             return _buildRecipeCard(
                                 title: recipe[DatabaseHelper.columnTitle],
+                                category: recipe[DatabaseHelper.columnCategory],
                                 description:
                                     recipe[DatabaseHelper.columnDescription],
                                 onTap: () {
@@ -246,6 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 Widget _buildRecipeCard(
     {required String title,
+    required String category,
     required String description,
     required VoidCallback onTap}) {
   return GestureDetector(
@@ -262,19 +268,49 @@ Widget _buildRecipeCard(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                            child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        )),
+                        Container(
+                            padding: const EdgeInsets.only(
+                                left: 4.0, right: 4.0, top: 2.0, bottom: 2.0),
+                            margin:
+                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.deepPurple,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Center(
+                              child: Text(
+                                StringUtils.truncateText(category, 7),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ))
+                      ],
+                    )),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4.0),
                   child: Text(
+                    maxLines: 2,
                     description,
                     style: const TextStyle(
                       fontSize: 14,
